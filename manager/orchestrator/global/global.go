@@ -302,7 +302,7 @@ func (g *Orchestrator) reconcileServices(ctx context.Context, serviceIDs []strin
 			service := g.globalServices[serviceID]
 
 			for nodeID, node := range g.nodes {
-				meetsConstraints := constraint.NodeMatches(service.constraints, node)
+				meetsConstraints := constraint.NodeMatches(service.constraints, nil, node)
 				ntasks := nodeTasks[serviceID][nodeID]
 				delete(nodeTasks[serviceID], nodeID)
 
@@ -436,7 +436,7 @@ func (g *Orchestrator) reconcileOneNode(ctx context.Context, node *api.Node) {
 
 	err = g.store.Batch(func(batch *store.Batch) error {
 		for serviceID, service := range g.globalServices {
-			if !constraint.NodeMatches(service.constraints, node) {
+			if !constraint.NodeMatches(service.constraints, nil, node) {
 				continue
 			}
 
@@ -509,7 +509,7 @@ func (g *Orchestrator) tickTasks(ctx context.Context) {
 				}
 
 				if node.Spec.Availability == api.NodeAvailabilityPause ||
-					!constraint.NodeMatches(serviceEntry.constraints, node) {
+					!constraint.NodeMatches(serviceEntry.constraints, nil, node) {
 					t.DesiredState = api.TaskStateShutdown
 					return store.UpdateTask(tx, t)
 				}

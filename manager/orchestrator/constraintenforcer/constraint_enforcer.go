@@ -109,7 +109,7 @@ loop:
 		// constraints.
 		if t.Spec.Placement != nil && len(t.Spec.Placement.Constraints) != 0 {
 			constraints, _ := constraint.Parse(t.Spec.Placement.Constraints)
-			if !constraint.NodeMatches(constraints, node) {
+			if !constraint.NodeMatches(constraints, nil, node) {
 				removeTasks[t.ID] = t
 				continue
 			}

@@ -104,7 +104,7 @@ func (c *Constraint) Match(whats ...string) bool {
 }
 
 // NodeMatches returns true if the node satisfies the given constraints.
-func NodeMatches(constraints []Constraint, n *api.Node) bool {
+func NodeMatches(constraints []Constraint, existingConstraints []Constraint, n *api.Node) bool {
 	for _, constraint := range constraints {
 		switch {
 		case strings.EqualFold(constraint.key, "node.id"):
@@ -197,6 +197,18 @@ func NodeMatches(constraints []Constraint, n *api.Node) bool {
 			if !constraint.Match(val) {
 				return false
 			}
+
+		// check constraint key 'antiaffinity.lock==value'
+		case strings.EqualFold(constraint.key, "antiaffinity.lock"):
+			for _, ec := range existingConstraints {
+				if strings.EqualFold(ec.key, "antiaffinity.lock") {
+					if ec.exp == constraint.exp {
+						return false
+					}
+				}
+			}
+			return true
+
 		default:
 			// key doesn't match predefined syntax
 			return false

@@ -217,7 +217,8 @@ func (f *PluginFilter) Explain(nodes int) string {
 
 // ConstraintFilter selects only nodes that match certain labels.
 type ConstraintFilter struct {
-	constraints []constraint.Constraint
+	constraints         []constraint.Constraint
+	existingConstraints []constraint.Constraint
 }
 
 // SetTask returns true when the filter is enable for a given task.
@@ -239,7 +240,20 @@ func (f *ConstraintFilter) SetTask(t *api.Task) bool {
 
 // Check returns true if the task's constraint is supported by the given node.
 func (f *ConstraintFilter) Check(n *NodeInfo) bool {
-	return constraint.NodeMatches(f.constraints, n.Node)
+
+	var existingRawConstraints []string
+	for _, task := range n.Tasks {
+		for _, c := range task.Spec.Placement.Constraints {
+			existingRawConstraints = append(existingRawConstraints, c)
+		}
+	}
+
+	existingConstraints, err := constraint.Parse(existingRawConstraints)
+	if err == nil {
+		f.existingConstraints = existingConstraints
+	}
+
+	return constraint.NodeMatches(f.constraints, f.existingConstraints, n.Node)
 }
 
 // Explain returns an explanation of a failure.
